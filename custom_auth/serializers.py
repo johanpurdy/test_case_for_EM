@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Roles, Resource, Permission
+from .models import User, Roles, Resource, CustomPermission
 from .utils import hash_password
 
 
@@ -93,16 +93,16 @@ class ResourceSerializer(serializers.ModelSerializer):
         fields = ['id', 'slug', 'name']
 
 
-class PermissionSerializer(serializers.ModelSerializer):
+class CustomPermissionSerializer(serializers.ModelSerializer):
     resource = ResourceSerializer(read_only = True)
     
     class Meta:
-        model = Permission
+        model = CustomPermission
         fields = ['id', 'action', 'resource']
 
 
 class RoleSerializer(serializers.ModelSerializer):
-    permissions = PermissionSerializer(many = True, read_only = True)
+    permissions = CustomPermissionSerializer(many = True, read_only = True)
 
     class Meta:
         model = Roles

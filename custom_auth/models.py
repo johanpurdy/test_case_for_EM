@@ -79,7 +79,7 @@ class Resource(models.Model):
         verbose_name_plural = 'Бизнес - Ресурсы'
 
 
-class Permission(models.Model):
+class CustomPermission(models.Model):
     ACTION_CHOICES = [
         ('create', 'Create'),
         ('read', 'Read'),
@@ -114,7 +114,7 @@ class RolePermission(models.Model):
         on_delete=models.CASCADE
     )
     permission = models.ForeignKey(
-        Permission,
+        CustomPermission,
         on_delete=models.CASCADE
     )
 
