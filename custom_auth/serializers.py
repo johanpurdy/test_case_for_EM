@@ -35,8 +35,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         raw_password = validated_data.pop('password')
         validated_data['password_hash'] = hash_password(raw_password)
 
-        return super().create(validated_data)
+        default_role, _ = Roles.objects.get_or_create(
+            slug='user', 
+            defaults={'name': 'Пользователь'}
+        )
+        validated_data['role'] = default_role
 
+        return super().create(validated_data)
 
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(label='Email адрес')
@@ -80,16 +85,37 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             raw_password = validated_data.pop('password')
             validated_data['password_hash'] = hash_password(raw_password)
         return super().update(instance, validated_data)
-
-
-class ReadUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'created_at']
-        read_only_fields = fields
-
+    
 
 class ResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resource
         fields = ['id', 'slug', 'name']
+
+
+class PermissionSerializer(serializers.ModelSerializer):
+    resource = ResourceSerializer(read_only = True)
+    
+    class Meta:
+        model = Permission
+        fields = ['id', 'action', 'resource']
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    permissions = PermissionSerializer(many = True, read_only = True)
+
+    class Meta:
+        model = Roles
+        fields = ['id', 'name', 'slug', 'permissions']
+
+
+class ReadUserSerializer(serializers.ModelSerializer):
+    role = RoleSerializer(read_only = True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'created_at']
+        read_only_fields = fields
+
+
+

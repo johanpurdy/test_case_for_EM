@@ -18,6 +18,14 @@ class User(models.Model):
         'Пароль',
         max_length=255
     )
+    role = models.ForeignKey(
+        'Roles',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Роль',
+        related_name='users'
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -45,11 +53,6 @@ class Roles(models.Model):
         max_length=32,
         unique=True,
     )
-    users = models.ManyToManyField(
-        User,
-        through='UserRoles',
-        related_name='roles'
-    )
 
     class Meta:
         verbose_name = 'Роль'
@@ -58,22 +61,6 @@ class Roles(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class UserRoles(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE
-    )
-    role = models.ForeignKey(
-        Roles,
-        on_delete=models.CASCADE
-    )
-
-    class Meta:
-        verbose_name = 'Роль Пользователя'
-        verbose_name_plural = 'Роли Пользователей'
-        unique_together = ('user', 'role')
 
 
 class Resource(models.Model):
