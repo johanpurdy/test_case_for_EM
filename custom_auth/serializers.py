@@ -1,9 +1,11 @@
 from rest_framework import serializers
-from .models import User, Roles, Resource, CustomPermission
+from .models import User, Role, Resource, CustomPermission
 from .utils import hash_password
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(label='Email адрес')
+
     password = serializers.CharField(
         write_only=True, 
         min_length=6, 
@@ -19,13 +21,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'password', 'password_repeat']
+        fields = ['first_name', 'last_name', 'patronymic', 'email', 'password', 'password_repeat']
 
     def validate(self, data):
         if data['password'] != data['password_repeat']:
             raise serializers.ValidationError({'password_repeat': 'Введенные пароли не совпадают.'})
 
-        if User.objects.filter(email=data['email']).exists():
+        if User.objects.filter(email=data['email'], is_active=True).exists():
             raise serializers.ValidationError({'email': 'Пользователь с таким email уже существует.'})
             
         return data
@@ -34,12 +36,23 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         validated_data.pop('password_repeat')
         raw_password = validated_data.pop('password')
         validated_data['password_hash'] = hash_password(raw_password)
+        
+        inactive_user = User.objects.filter(email=validated_data['email'], is_active=False).first()
 
-        default_role, _ = Roles.objects.get_or_create(
+        default_role, _ = Role.objects.get_or_create(
             slug='user', 
             defaults={'name': 'Пользователь'}
         )
         validated_data['role'] = default_role
+
+        if inactive_user:
+            validated_data.pop('email', None)
+            for attr, value in validated_data.items():
+                setattr(inactive_user, attr, value)
+
+            inactive_user.is_active = True
+            inactive_user.save()
+            return inactive_user
 
         return super().create(validated_data)
 
@@ -53,6 +66,9 @@ class UserLoginSerializer(serializers.Serializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
+
+    email = serializers.EmailField(required=False)
+
     password = serializers.CharField(
         write_only=True, 
         required=False,
@@ -63,7 +79,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'password']
+        fields = ['first_name', 'patronymic', 'last_name', 'email', 'password']
         extra_kwargs = {
             'first_name': {'required': False},
             'last_name': {'required': False},
@@ -71,12 +87,11 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         }
 
     def validate_email(self, value):
-        request = self.context.get('request')
-        if not request or not request.user:
+        if not self.instance:
             return value
-            
-        current_user = request.user
-        if User.objects.filter(email=value).exclude(id=current_user.id).exists():
+
+        current_user = self.instance.id
+        if User.objects.filter(email=value, is_active=True).exclude(id=current_user).exists():
             raise serializers.ValidationError('Пользователь с таким email уже существует.')
         return value
 
@@ -105,7 +120,7 @@ class RoleSerializer(serializers.ModelSerializer):
     permissions = CustomPermissionSerializer(many = True, read_only = True)
 
     class Meta:
-        model = Roles
+        model = Role
         fields = ['id', 'name', 'slug', 'permissions']
 
 
@@ -114,7 +129,7 @@ class ReadUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'created_at']
+        fields = ['id', 'first_name', 'patronymic', 'last_name', 'email', 'role', 'created_at']
         read_only_fields = fields
 
 

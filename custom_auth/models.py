@@ -5,6 +5,12 @@ class User(models.Model):
         'Имя',
         max_length=150,
     )
+    patronymic = models.CharField(
+        'Отчество',
+        max_length=150,
+        blank=True,
+        default=''
+    )
     last_name = models.CharField(
         'Фамилия',
         max_length=150,
@@ -19,7 +25,7 @@ class User(models.Model):
         max_length=255
     )
     role = models.ForeignKey(
-        'Roles',
+        'Role',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -42,7 +48,7 @@ class User(models.Model):
         return f'{self.first_name} {self.last_name}'
 
 
-class Roles(models.Model):
+class Role(models.Model):
     name = models.CharField(
         'Название',
         max_length=32,
@@ -78,6 +84,8 @@ class Resource(models.Model):
         verbose_name = 'Бизнес - Ресурс'
         verbose_name_plural = 'Бизнес - Ресурсы'
 
+    def __str__(self):
+        return self.name
 
 class CustomPermission(models.Model):
     ACTION_CHOICES = [
@@ -97,7 +105,7 @@ class CustomPermission(models.Model):
         choices=ACTION_CHOICES
     )
     roles = models.ManyToManyField(
-        Roles,
+        Role,
         through='RolePermission',
         related_name='permissions'
     )
@@ -107,10 +115,13 @@ class CustomPermission(models.Model):
         verbose_name_plural = 'Разрешения'
         unique_together = ('resource', 'action')
 
+    def __str__(self):
+        return self.action
+
 
 class RolePermission(models.Model):
     role = models.ForeignKey(
-        Roles,
+        Role,
         on_delete=models.CASCADE
     )
     permission = models.ForeignKey(
@@ -128,7 +139,10 @@ class GuestUser:
     id = None
     email = None
     first_name = ''
+    patronymic = ''
     last_name = ''
+    role = None
+    is_active = False
 
     @property
     def is_authenticated(self):

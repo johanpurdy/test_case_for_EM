@@ -6,7 +6,7 @@ import bcrypt
 
 def generate_access_token(user_id):
     payload = {
-        'sub': user_id,
+        'sub': str(user_id),
         'exp': datetime.now(timezone.utc) + timedelta(hours=2),
         'iat': datetime.now(timezone.utc),
         'jti': str(uuid.uuid4())
