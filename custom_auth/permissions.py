@@ -13,7 +13,7 @@ class CustomResourcePermission(BasePermission):
         if user.role and user.role.slug == 'admin':
             return True
 
-        actions = {choice[0]: choice[0] for choice in CustomPermission.ACTION_CHOICES}
+        actions = {key: key for key, _ in CustomPermission.ACTION_CHOICES}
         
         method_map = {
             'GET': actions.get('read'),
