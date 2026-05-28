@@ -1,12 +1,11 @@
+import datetime
+
 import pytest
 from django.urls import reverse
 from rest_framework import status
 from custom_auth.models import User, BlacklistedToken, RolePermission
 from custom_auth.utils import generate_access_token
-from django.test.client import Client
-import time
-from unittest.mock import patch
-
+from freezegun import freeze_time
 
 pytestmark = pytest.mark.django_db
 
@@ -130,7 +129,8 @@ def test_invalid_and_expired_token(api_client, active_user):
     response_invalid = api_client.get(url)
     assert response_invalid.status_code == status.HTTP_401_UNAUTHORIZED
 
-    with patch('custom_auth.utils.time.time', return_value=time.time() - 86400):
+    past_time = datetime.datetime.now() - datetime.timedelta(days=1)
+    with freeze_time(past_time):
         expired_token = generate_access_token(active_user.id)
         
     api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {expired_token}')
@@ -138,12 +138,13 @@ def test_invalid_and_expired_token(api_client, active_user):
     assert response_expired.status_code == status.HTTP_401_UNAUTHORIZED
 
 
+
 def test_update_profile_success(api_client, active_user):
     '''Успешное обновление своего профиля (PATCH /api/users/me/)'''
     token = generate_access_token(active_user.id)
     api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
     
-    url = reverse('user_me')
+    url = reverse('user_profile')
     data = {
         'first_name': 'Новое Имя',
         'last_name': 'Новая Фамилия'
@@ -161,7 +162,7 @@ def test_delete_profile_success(api_client, active_user):
     token = generate_access_token(active_user.id)
     api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
     
-    url = reverse('user_me')
+    url = reverse('user_profile')
     response = api_client.delete(url)
 
     assert response.status_code in [status.HTTP_200_OK, status.HTTP_204_NO_CONTENT]
