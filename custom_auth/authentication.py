@@ -1,7 +1,7 @@
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
-from .models import User, GuestUser
+from .models import BlacklistedToken, User, GuestUser
 from .utils import decode_access_token
 
 
@@ -23,6 +23,12 @@ class CustomJWTAuthentication(BaseAuthentication):
         payload = decode_access_token(token)
         if not payload:
                     raise AuthenticationFailed('Невалидный или просроченный токен доступа.')
+        
+        jti = payload.get('jti')
+        if jti:
+            is_blacklisted = BlacklistedToken.objects.filter(token__jti=jti).exists()
+            if is_blacklisted:
+                raise AuthenticationFailed('Данный токен отозван (был произведен logout).')
         
         user_id = int(payload.get('sub'))
         if not user_id:
