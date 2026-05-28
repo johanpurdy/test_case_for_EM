@@ -10,15 +10,15 @@ class CustomJWTAuthentication(BaseAuthentication):
         auth_header = request.headers.get ('Authorization')
 
         if not auth_header:
-            return(GuestUser(), None)
+            return None
         
         try:
             header, token = auth_header.split()
         except ValueError:
-            return(GuestUser(), None)
+            return None
         
         if header.lower() != 'bearer':
-            return (GuestUser(), None)
+            return  None
         
         payload = decode_access_token(token)
         if not payload:
