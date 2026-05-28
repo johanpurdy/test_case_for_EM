@@ -71,7 +71,7 @@ class LoginUserView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
      
-     def post(self, request):
+    def post(self, request):
         serializer = UserLoginSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
