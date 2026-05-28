@@ -32,39 +32,33 @@ class RegisterUserView(APIView):
     
 
 class LogoutUserView(APIView):
-
     def post(self, request):
         if not request.user or not request.user.is_authenticated:
             raise NotAuthenticated('Вы не вошли в систему.')
-
-        payload = request.auth  
-        if not payload or not isinstance(payload, dict):
-            return Response(
-                {'detail': 'Не удалось определить токен.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        raw_token = request.auth  
-        if not raw_token:
-            return Response({"detail": "Токен доступа не найден в запросе."}, status=status.HTTP_400_BAD_REQUEST)
-
-        if isinstance(raw_token, dict):
-            jti = raw_token.get('jti')
-        else:
-            payload = decode_access_token(str(raw_token))
-            if not payload:
-                return Response({"detail": "Невалидный или просроченный токен."}, status=status.HTTP_400_BAD_REQUEST)
-            jti = payload.get('jti')
-
+        
+        raw_token = request.auth
+        if not raw_token or not isinstance(raw_token, str):
+            return Response({"detail": "Токен доступа не найден или неверного формата."}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+        
+        payload = decode_access_token(raw_token)
+        if not payload:
+            return Response({"detail": "Невалидный или просроченный токен."}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+        
+        jti = payload.get('jti')
         if not jti:
-            return Response({"detail": "Идентификатор токена (jti) отсутствует."}, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({"detail": "Идентификатор токена отсутствует."}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+        
         try:
             outstanding_token = OutstandingToken.objects.get(jti=jti)
             BlacklistedToken.objects.get_or_create(token=outstanding_token)
-            return Response({"detail": "Вы успешно вышли из системы. Токен аннулирован."}, status=status.HTTP_200_OK)
+            return Response({"detail": "Вы успешно вышли из системы."}, 
+                          status=status.HTTP_200_OK)
         except OutstandingToken.DoesNotExist:
-            return Response({"detail": "Токен не найден в реестре системы."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Токен не найден в реестре."}, 
+                          status=status.HTTP_404_NOT_FOUND)
     
 class LoginUserView(APIView):
      
