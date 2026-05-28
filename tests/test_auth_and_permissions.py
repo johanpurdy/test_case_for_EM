@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 from custom_auth.models import User, BlacklistedToken, RolePermission
-from .utils import generate_access_token
+from custom_auth.utils import generate_access_token
 
 pytestmark = pytest.mark.django_db
 
