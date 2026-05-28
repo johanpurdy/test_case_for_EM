@@ -135,6 +135,32 @@ class RolePermission(models.Model):
         unique_together = ('role', 'permission')
 
 
+class OutstandingToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='outstanding_tokens')
+    jti = models.UUIDField('Уникальный ID токена', unique=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField('Время истечения токена')
+
+    class Meta:
+        verbose_name = 'Выданный токен'
+        verbose_name_plural = 'Выданные токены'
+
+    def __str__(self):
+        return f"Token {self.jti} for {self.user.email}"
+
+
+class BlacklistedToken(models.Model):
+    token = models.OneToOneField(OutstandingToken, on_delete=models.CASCADE, related_name='blacklisted')
+    blacklisted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Токен в черном списке'
+        verbose_name_plural = 'Черный список токенов'
+
+    def __str__(self):
+        return f"Blacklisted: {self.token.jti}"
+    
+
 class GuestUser:
     id = None
     email = None
