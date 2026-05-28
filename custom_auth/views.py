@@ -83,7 +83,7 @@ class LoginUserView(APIView):
 
         right_password = check_password(password, user.password_hash)
 
-        if not user or not right_password:
+        if not right_password:
             return Response(
                 {'detail': 'Неверный email или пароль.'},
                 status=status.HTTP_401_UNAUTHORIZED
