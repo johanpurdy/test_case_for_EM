@@ -57,6 +57,17 @@ REST_FRAMEWORK = {
     ],
 }
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'auth_project_DB',
+        'USER': 'auth_project_user',
+        'PASSWORD': 'auth_project_password',
+        'HOST': 'db',
+        'PORT': 5432
+    }
+}
+
 ROOT_URLCONF = 'backend_project.urls'
 
 TEMPLATES = [
