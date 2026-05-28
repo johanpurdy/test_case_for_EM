@@ -68,6 +68,9 @@ class LogoutUserView(APIView):
     
 class LoginUserView(APIView):
      
+    authentication_classes = []
+    permission_classes = [AllowAny]
+     
      def post(self, request):
         serializer = UserLoginSerializer(data=request.data)
         if not serializer.is_valid():
