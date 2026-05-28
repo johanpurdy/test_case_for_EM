@@ -19,6 +19,7 @@ from custom_auth.views import (
     RegisterUserView, LoginUserView, LogoutUserView, UserProfileView, 
     AdminRulesView, MockDocumentView, MockAnalyticsView
 )
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
     path('api/auth/register/', RegisterUserView.as_view(), name='auth_register'),
@@ -30,4 +31,7 @@ urlpatterns = [
     
     path('api/v1/documents/', MockDocumentView.as_view(), name='mock_documents'),
     path('api/v1/analytics/', MockAnalyticsView.as_view(), name='mock_analytics'),
+
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
