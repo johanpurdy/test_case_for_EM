@@ -162,17 +162,18 @@ class BlacklistedToken(models.Model):
     
 
 class GuestUser:
-    id = None
-    email = None
-    first_name = ''
-    patronymic = ''
-    last_name = ''
-    role = None
-    is_active = False
+    def __init__(self):
+        self.id = None
+        self.email = None
+        self.first_name = ''
+        self.patronymic = ''
+        self.last_name = ''
+        self.role = None
+        self.is_active = False
 
     @property
     def is_authenticated(self):
         return False
 
     def __str__(self):
-        return "Анонимный пользователь (Гость)"
+        return 'Анонимный пользователь (Гость)'

@@ -1,8 +1,8 @@
 import pytest
 from datetime import datetime, timedelta, timezone
 from django.utils import timezone as django_timezone
-from .models import User, Role, Resource, CustomPermission, RolePermission, OutstandingToken
-from .utils import hash_password, generate_access_token
+from custom_auth.models import User, Role, Resource, CustomPermission, RolePermission, OutstandingToken
+from custom_auth.utils import hash_password, generate_access_token
 from rest_framework.test import APIClient
 
 @pytest.fixture
