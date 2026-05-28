@@ -7,7 +7,7 @@ from .utils import decode_access_token
 
 class CustomJWTAuthentication(BaseAuthentication):
     def authenticate(self, request):
-        auth_header = request.header.get
+        auth_header = request.headers.get ('Authorization')
 
         if not auth_header:
             return(GuestUser(), None)
@@ -17,14 +17,14 @@ class CustomJWTAuthentication(BaseAuthentication):
         except ValueError:
             return(GuestUser(), None)
         
-        if header.loswer() != 'bearer':
+        if header.lower() != 'bearer':
             return (GuestUser(), None)
         
         payload = decode_access_token(token)
         if not payload:
                     raise AuthenticationFailed('Невалидный или просроченный токен доступа.')
         
-        user_id = int(payload('sub'))
+        user_id = int(payload.get('sub'))
         if not user_id:
             raise AuthenticationFailed('Токен не содержит идентификатор пользователя.')
         
