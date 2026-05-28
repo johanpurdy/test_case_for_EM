@@ -76,12 +76,18 @@ class LoginUserView(APIView):
         user = User.objects.filter(email=email, is_active=True).first()
 
         if not user:
-            raise AuthenticationFailed('Неверный email или пароль.')
+            return Response(
+                {'detail': 'Неверный email или пароль.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
         right_password = check_password(password, user.password_hash)
 
         if not user or not right_password:
-            raise AuthenticationFailed('Неверный email или пароль.')
+            return Response(
+                {'detail': 'Неверный email или пароль.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         
         token = generate_access_token(user.id)
         return Response({
