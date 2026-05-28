@@ -13,6 +13,9 @@ class CustomResourcePermission(BasePermission):
         if user.role and user.role.slug == 'admin':
             return True
 
+        if not user.role:
+            raise PermissionDenied('У пользователя не назначена роль')
+
         actions = {key: key for key, _ in CustomPermission.ACTION_CHOICES}
         
         method_map = {

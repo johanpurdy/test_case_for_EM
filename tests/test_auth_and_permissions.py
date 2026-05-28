@@ -129,7 +129,7 @@ def test_invalid_and_expired_token(api_client, active_user):
     response_invalid = api_client.get(url)
     assert response_invalid.status_code == status.HTTP_401_UNAUTHORIZED
 
-    past_time = datetime.datetime.now() - datetime.timedelta(days=1)
+    past_time = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1)
     with freeze_time(past_time):
         expired_token = generate_access_token(active_user.id)
         
