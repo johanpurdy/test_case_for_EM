@@ -7,7 +7,7 @@ from custom_auth.permissions import CustomResourcePermission
 from .serializers import ReadUserSerializer, UserLoginSerializer, UserRegisterSerializer, UserUpdateSerializer
 from .utils import generate_access_token, check_password
 from rest_framework.permissions import (AllowAny)
-from .models import CustomPermission, Role, RolePermission, User
+from .models import BlacklistedToken, CustomPermission, OutstandingToken, Role, RolePermission, User
 
 
 class RegisterUserView(APIView):
@@ -31,15 +31,40 @@ class RegisterUserView(APIView):
         )
     
 
-class LogoutUserView(APIView):
+class LogoutView(APIView):
 
     def post(self, request):
         if not request.user or not request.user.is_authenticated:
             raise NotAuthenticated('Вы не вошли в систему.')
-        return Response(
-            {'detail': 'Вы успешно вышли из системы.'},
-            status=status.HTTP_200_OK
-        )
+
+        payload = request.auth  
+        if not payload or not isinstance(payload, dict):
+            return Response(
+                {'detail': 'Не удалось определить токен.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        jti = payload.get('jti')
+        if not jti:
+            return Response(
+                {'detail': 'Идентификатор токена отсутствует.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            outstanding_token = OutstandingToken.objects.get(jti=jti)
+            BlacklistedToken.objects.get_or_create(token=outstanding_token)
+            
+            return Response(
+                {'detail': 'Вы успешно вышли из системы. Токен аннулирован.'},
+                status=status.HTTP_200_OK
+            )
+            
+        except OutstandingToken.DoesNotExist:
+            return Response(
+                {'detail': 'Токен не найден в реестре системы.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
     
 class LoginUserView(APIView):
      
