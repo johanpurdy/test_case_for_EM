@@ -4,16 +4,31 @@ import uuid
 from django.conf import settings
 import bcrypt
 
+from .models import OutstandingToken, User
+
 def generate_access_token(user_id):
+    jti = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(hours=2)
+
     payload = {
         'sub': str(user_id),
-        'exp': datetime.now(timezone.utc) + timedelta(hours=2),
-        'iat': datetime.now(timezone.utc),
-        'jti': str(uuid.uuid4())
+        'exp': expires_at,
+        'iat': now,
+        'jti': jti
     }
     
     key = settings.SECRET_KEY
-    return jwt.encode(payload, key, algorithm='HS256')
+    token = jwt.encode(payload, key, algorithm='HS256')
+    
+    user = User.objects.get(id=user_id)
+    OutstandingToken.objects.create(
+        user=user,
+        jti=jti,
+        expires_at=expires_at
+    )
+
+    return token
 
 
 def decode_access_token(token):
