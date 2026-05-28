@@ -31,7 +31,7 @@ class RegisterUserView(APIView):
         )
     
 
-class LogoutView(APIView):
+class LogoutUserView(APIView):
 
     def post(self, request):
         if not request.user or not request.user.is_authenticated:

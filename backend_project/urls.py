@@ -16,14 +16,14 @@ Including another URLconf
 """
 from django.urls import path
 from custom_auth.views import (
-    RegisterView, LoginView, LogoutView, UserProfileView, 
+    RegisterUserView, LoginUserView, LogoutUserView, UserProfileView, 
     AdminRulesView, MockDocumentView, MockAnalyticsView
 )
 
 urlpatterns = [
-    path('api/auth/register/', RegisterView.as_view(), name='auth_register'),
-    path('api/auth/login/', LoginView.as_view(), name='login'),
-    path('api/auth/logout/', LogoutView.as_view(), name='logout'),
+    path('api/auth/register/', RegisterUserView.as_view(), name='auth_register'),
+    path('api/auth/login/', LoginUserView.as_view(), name='login'),
+    path('api/auth/logout/', LogoutUserView.as_view(), name='logout'),
     path('api/users/me/', UserProfileView.as_view(), name='user_profile'),
     
     path('api/admin/rules/', AdminRulesView.as_view(), name='admin_rules'),
