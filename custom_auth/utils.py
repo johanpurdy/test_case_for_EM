@@ -34,7 +34,7 @@ def generate_access_token(user_id):
 def decode_access_token(token):
     key = settings.SECRET_KEY
     try:
-        payload = jwt.decode(token, key, algorithms='HS256')
+        payload = jwt.decode(token, key, algorithms=['HS256'])
         return payload
     except jwt.ExpiredSignatureError:
         return None

@@ -3,6 +3,8 @@ from django.urls import reverse
 from rest_framework import status
 from custom_auth.models import User, BlacklistedToken, RolePermission
 from custom_auth.utils import generate_access_token
+from django.test.client import Client
+
 
 pytestmark = pytest.mark.django_db
 
@@ -43,13 +45,15 @@ def test_login_success(api_client, active_user):
     assert response.status_code == status.HTTP_200_OK
     assert "access_token" in response.data
 
-def test_login_inactive_user(api_client, active_user):
+def test_login_inactive_user(active_user):
+    client = Client()
     active_user.is_active = False
     active_user.save()
     
     url = reverse('login')
     data = {"email": "user@test.com", "password": "password123"}
-    response = api_client.post(url, data, format='json')
+    response = client.post(url, data, format='json')
+    
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 def test_mock_resource_401_unauthorized(api_client):

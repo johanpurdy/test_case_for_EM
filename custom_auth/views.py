@@ -5,7 +5,7 @@ from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
 
 from custom_auth.permissions import CustomResourcePermission
 from .serializers import ReadUserSerializer, UserLoginSerializer, UserRegisterSerializer, UserUpdateSerializer
-from .utils import generate_access_token, check_password
+from .utils import decode_access_token, generate_access_token, check_password
 from rest_framework.permissions import (AllowAny)
 from .models import BlacklistedToken, CustomPermission, OutstandingToken, Role, RolePermission, User
 
@@ -44,32 +44,32 @@ class LogoutUserView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        jti = payload.get('jti')
+        raw_token = request.auth  
+        if not raw_token:
+            return Response({"detail": "Токен доступа не найден в запросе."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if isinstance(raw_token, dict):
+            jti = raw_token.get('jti')
+        else:
+            payload = decode_access_token(str(raw_token))
+            if not payload:
+                return Response({"detail": "Невалидный или просроченный токен."}, status=status.HTTP_400_BAD_REQUEST)
+            jti = payload.get('jti')
+
         if not jti:
-            return Response(
-                {'detail': 'Идентификатор токена отсутствует.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"detail": "Идентификатор токена (jti) отсутствует."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             outstanding_token = OutstandingToken.objects.get(jti=jti)
             BlacklistedToken.objects.get_or_create(token=outstanding_token)
-            
-            return Response(
-                {'detail': 'Вы успешно вышли из системы. Токен аннулирован.'},
-                status=status.HTTP_200_OK
-            )
-            
+            return Response({"detail": "Вы успешно вышли из системы. Токен аннулирован."}, status=status.HTTP_200_OK)
         except OutstandingToken.DoesNotExist:
-            return Response(
-                {'detail': 'Токен не найден в реестре системы.'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"detail": "Токен не найден в реестре системы."}, status=status.HTTP_404_NOT_FOUND)
     
 class LoginUserView(APIView):
      
     authentication_classes = []
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny] 
      
     def post(self, request):
         serializer = UserLoginSerializer(data=request.data)
@@ -80,6 +80,10 @@ class LoginUserView(APIView):
         password = serializer.validated_data['password']
 
         user = User.objects.filter(email=email, is_active=True).first()
+
+        if not user:
+            raise AuthenticationFailed('Неверный email или пароль.')
+
         right_password = check_password(password, user.password_hash)
 
         if not user or not right_password:
