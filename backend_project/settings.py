@@ -51,13 +51,20 @@ REST_FRAMEWORK = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'auth_project_DB'),
-        'USER': os.getenv('DB_USER', 'auth_project_user'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'auth_project_password'),
-        'HOST': os.getenv('DB_HOST', 'db'),
+        'NAME': os.getenv('POSTGRES_DB', 'django'),
+        'USER': os.getenv('POSTGRES_USER', 'django'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
         'PORT': os.getenv('DB_PORT', 5432)
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 ROOT_URLCONF = 'backend_project.urls'
 
@@ -79,15 +86,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend_project.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 
 # Password validation
